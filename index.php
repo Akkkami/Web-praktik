@@ -1,36 +1,85 @@
 <?php
-require_once 'car.php';
-require_once 'parking.php';
 
-$cars1 = [new Car('c'), new Car('t'), new Car('c'), new Car('c')];
-$cars2 = [new Car('t'), new Car('t'), new Car('t'), new Car('t'), new Car('t'), new Car('c'), new Car('c'), new Car('c')];
-$cars3 = [new Car('t'), new Car('t'), new Car('t'), new Car('t'), new Car('t'), new Car('c'), new Car('c'), new Car('c')];
+// Enum для типов транспортных средств
+enum VehicleType: string {
+    case Car = 'c';
+    case Truck = 't';
 
-$parking1 = new Parking([4, 12, 3]);
-$parking2 = new Parking([1, 4, 3]);
-$parking3 = new Parking([4, 2, 3]);
-
-foreach ($cars1 as $car) {
-    if ($parking1->parkCar($car)) {
-        echo "Машина типа " . $car->getType() . " успешно припаркована.<br>";
-    } else {
-        echo "Не удалось припарковать машину типа " . $car->getType() . ". Недостаточно мест.<br>";
+    public static function fromChar(string $char): self {
+        return match ($char) {
+            'c' => self::Car,
+            't' => self::Truck,
+        };
     }
 }
 
-foreach ($cars2 as $car) {
-    if ($parking2->parkCar($car)) {
-        echo "Машина типа " . $car->getType() . " успешно припаркована.<br>";
-    } else {
-        echo "Не удалось припарковать машину типа " . $car->getType() . ". Недостаточно мест.<br>";
+// Класс, представляющий один этаж парковки
+class ParkingFloor {
+    private int $availableSpaces;
+
+    public function __construct(int $availableSpaces) {
+        $this->availableSpaces = $availableSpaces;
+    }
+
+    public function parkVehicle(): bool {
+        if ($this->availableSpaces > 0) {
+            $this->availableSpaces--;
+            return true;
+        }
+        return false;
     }
 }
 
-foreach ($cars3 as $car) {
-    if ($parking3->parkCar($car)) {
-        echo "Машина типа " . $car->getType() . " успешно припаркована.<br>";
-    } else {
-        echo "Не удалось припарковать машину типа " . $car->getType() . ". Недостаточно мест.<br>";
+// Класс для управления парковкой
+class ParkingLot {
+    private array $floors;
+
+    public function __construct(int $floor1Spaces, int $floor2Spaces, int $floor3Spaces) {
+        $this->floors = [
+            1 => new ParkingFloor($floor1Spaces),
+            2 => new ParkingFloor($floor2Spaces),
+            3 => new ParkingFloor($floor3Spaces)
+        ];
+    }
+
+    public function parkVehicle(VehicleType $type): string {
+        $floorsToCheck = ($type === VehicleType::Car) ? [3, 2, 1] : [1];
+
+        foreach ($floorsToCheck as $floor) {
+            if ($this->floors[$floor]->parkVehicle()) {
+                return 'y';
+            }
+        }
+
+        return 'n';
     }
 }
+
+// Главная функция
+function main() {
+    $inputs = [
+        [2, 1, 3],
+        [1, 2, 3]
+    ];
+
+    $vehicles = [
+        ['c', 'c', 'c', 'c', 't'],
+        ['t', 't', 'c', 't', 't', 'c', 't', 'c']
+    ];
+
+    foreach ($inputs as $index => $input) {
+        [$floor1, $floor2, $floor3] = $input;
+        $parkingLot = new ParkingLot($floor1, $floor2, $floor3);
+        $result = '';
+
+        foreach ($vehicles[$index] as $vehicle) {
+            $type = VehicleType::fromChar($vehicle);
+            $result .= $parkingLot->parkVehicle($type) . ' ';
+        }
+
+        echo trim($result) . PHP_EOL;
+    }
+}
+
+main();
 ?>
