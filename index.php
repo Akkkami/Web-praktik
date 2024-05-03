@@ -1,5 +1,4 @@
 <?php
-
 // Enum для типов транспортных средств
 enum VehicleType: string {
     case Car = 'c';
@@ -12,7 +11,6 @@ enum VehicleType: string {
         };
     }
 }
-
 // Класс, представляющий один этаж парковки
 class ParkingFloor {
     private int $availableSpaces;
@@ -29,7 +27,6 @@ class ParkingFloor {
         return false;
     }
 }
-
 // Класс для управления парковкой
 class ParkingLot {
     private array $floors;
@@ -55,7 +52,6 @@ class ParkingLot {
     }
 }
 
-// Главная функция
 function main() {
     $inputs = [
         [2, 1, 3],
