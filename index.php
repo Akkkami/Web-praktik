@@ -1,81 +1,33 @@
 <?php
-// Enum для типов транспортных средств
-enum VehicleType: string {
-    case Car = 'c';
-    case Truck = 't';
 
-    public static function fromChar(string $char): self {
-        return match ($char) {
-            'c' => self::Car,
-            't' => self::Truck,
-        };
-    }
+require 'VehicleType.php';
+require 'ParkingStatus.php';
+require 'Vehicle.php';
+require 'Car.php';
+require 'Truck.php';
+require 'Parking.php';
+require 'ParkingResult.php';
+require 'Database.php';
+
+// Получаем данные из входного потока (например, из формы или командной строки)
+$spacesFloor1 = intval($_POST['spacesFloor1']);
+$spacesFloor2 = intval($_POST['spacesFloor2']);
+$spacesFloor3 = intval($_POST['spacesFloor3']);
+$vehiclesInput = $_POST['vehicles']; // Пример: "t c c c"
+
+// Создаем объект парковки
+$parking = new Parking($spacesFloor1, $spacesFloor2, $spacesFloor3);
+
+// Подключаемся к базе данных
+$db = new Database('mysql:host=localhost;dbname=parking_db', 'root', 'password');
+
+// Обрабатываем каждый автомобиль
+$vehicles = explode(' ', $vehiclesInput);
+foreach ($vehicles as $vehicleCode) {
+    $vehicle = $vehicleCode === VehicleType::CAR->value ? new Car() : new Truck();
+    $status = $parking->parkVehicle($vehicle);
+    $result = new ParkingResult($vehicle, $status);
+    $db->saveParkingResult($result);
+    echo $status->value . ' ';
 }
-// Класс, представляющий один этаж парковки
-class ParkingFloor {
-    private int $availableSpaces;
-
-    public function __construct(int $availableSpaces) {
-        $this->availableSpaces = $availableSpaces;
-    }
-
-    public function parkVehicle(): bool {
-        if ($this->availableSpaces > 0) {
-            $this->availableSpaces--;
-            return true;
-        }
-        return false;
-    }
-}
-// Класс для управления парковкой
-class ParkingLot {
-    private array $floors;
-
-    public function __construct(int $floor1Spaces, int $floor2Spaces, int $floor3Spaces) {
-        $this->floors = [
-            1 => new ParkingFloor($floor1Spaces),
-            2 => new ParkingFloor($floor2Spaces),
-            3 => new ParkingFloor($floor3Spaces)
-        ];
-    }
-
-    public function parkVehicle(VehicleType $type): string {
-        $floorsToCheck = ($type === VehicleType::Car) ? [3, 2, 1] : [1];
-
-        foreach ($floorsToCheck as $floor) {
-            if ($this->floors[$floor]->parkVehicle()) {
-                return 'y';
-            }
-        }
-
-        return 'n';
-    }
-}
-
-function main() {
-    $inputs = [
-        [2, 1, 3],
-        [1, 2, 3]
-    ];
-
-    $vehicles = [
-        ['c', 'c', 'c', 'c', 't'],
-        ['t', 't', 'c', 't', 't', 'c', 't', 'c']
-    ];
-
-    foreach ($inputs as $index => $input) {
-        [$floor1, $floor2, $floor3] = $input;
-        $parkingLot = new ParkingLot($floor1, $floor2, $floor3);
-        $result = '';
-
-        foreach ($vehicles[$index] as $vehicle) {
-            $type = VehicleType::fromChar($vehicle);
-            $result .= $parkingLot->parkVehicle($type) . ' ';
-        }
-
-        echo trim($result) . PHP_EOL;
-    }
-}
-
-main();
 ?>
