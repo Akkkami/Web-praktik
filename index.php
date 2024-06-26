@@ -1,8 +1,6 @@
 <?php
 
 require 'VehicleType.php';
-require 'car.php';
-require 'Vehicle.php';
 require 'type-car.php';
 require 'parking.php';
 require 'ParkingResult.php';
