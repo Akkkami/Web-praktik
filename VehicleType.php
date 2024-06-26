@@ -11,4 +11,3 @@ enum ParkingStatus: string
     case SUCCESS = 'y';
     case FAILURE = 'n';
 }
-?>

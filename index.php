@@ -1,13 +1,21 @@
 <?php
 
 require 'VehicleType.php';
-require 'ParkingStatus.php';
+require 'car.php';
 require 'Vehicle.php';
-require 'Car.php';
-require 'Truck.php';
-require 'Parking.php';
+require 'type-car.php';
+require 'parking.php';
 require 'ParkingResult.php';
-require 'Database.php';
+
+// Подключаемся к базе данных Microsoft SQL Server
+$serverName = "DESKTOP-KFHRIFS\MSSQLSERVER01";
+$connectionOptions = [
+    "Database" => "parking",
+    "Uid" => "",
+    "PWD" => ""
+];
+$dsn = "sqlsrv:server=$serverName;Database=parking_db";
+$pdo = new PDO($dsn, $connectionOptions['Uid'], $connectionOptions['PWD']);
 
 // Получаем данные из входного потока (например, из формы или командной строки)
 $spacesFloor1 = intval($_POST['spacesFloor1']);
@@ -17,17 +25,15 @@ $vehiclesInput = $_POST['vehicles']; // Пример: "t c c c"
 
 // Создаем объект парковки
 $parking = new Parking($spacesFloor1, $spacesFloor2, $spacesFloor3);
-
-// Подключаемся к базе данных
-$db = new Database('mysql:host=localhost;dbname=parking_db', 'root', 'password');
+$parking->saveToDatabase($pdo);
 
 // Обрабатываем каждый автомобиль
 $vehicles = explode(' ', $vehiclesInput);
 foreach ($vehicles as $vehicleCode) {
     $vehicle = $vehicleCode === VehicleType::CAR->value ? new Car() : new Truck();
+    $vehicle->saveToDatabase($pdo);
     $status = $parking->parkVehicle($vehicle);
     $result = new ParkingResult($vehicle, $status);
-    $db->saveParkingResult($result);
+    $result->saveToDatabase($pdo);
     echo $status->value . ' ';
 }
-?>

@@ -23,5 +23,12 @@ class Parking
         }
         return ParkingStatus::FAILURE;
     }
+
+    public function saveToDatabase(PDO $pdo): void
+    {
+        foreach ($this->availableSpaces as $floor => $spaces) {
+            $stmt = $pdo->prepare("INSERT INTO parking (floor, available_spaces) VALUES (:floor, :spaces)");
+            $stmt->execute([':floor' => $floor, ':spaces' => $spaces]);
+        }
+    }
 }
-?>
